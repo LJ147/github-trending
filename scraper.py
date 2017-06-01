@@ -7,6 +7,7 @@ import requests
 import os
 import time
 from pyquery import PyQuery as pq
+from wxpy import *
 
 
 def git_add_commit_push(date, filename):
@@ -21,7 +22,7 @@ def git_add_commit_push(date, filename):
 
 def createMarkdown(date, filename):
     with open(filename, 'w') as f:
-        f.write("###" + date + "\n")
+        f.write("### " + date + "\n")
 
 
 def scrape(language, filename):
@@ -44,7 +45,7 @@ def scrape(language, filename):
 
     # codecs to solve the problem utf-8 codec like chinese
     with codecs.open(filename, "a", "utf-8") as f:
-        f.write('\n####{language}\n'.format(language=language))
+        f.write('\n#### {language}\n'.format(language=language))
 
         for item in items:
             i = pq(item)
@@ -56,6 +57,30 @@ def scrape(language, filename):
             # ownerImg = i("p.repo-list-meta a img").attr("src")
             # print(ownerImg)
             f.write(u"* [{title}]({url}):{description}\n".format(title=title, url=url, description=description))
+        f.flush()
+
+qr_path = 'static/qrcode.png'
+def qr_callback(**kwargs):
+    global sms_sent
+
+    # if not sms_sent:
+        # 发送短信
+        # send_sms()
+        # sms_sent = True
+
+    with open(qr_path, 'wb') as fp:
+        fp.write(kwargs['qrcode'])
+
+def remove_qr():
+    if os.path.isfile(qr_path):
+        # noinspection PyBroadException
+        try:
+            os.remove(qr_path)
+        except:
+            pass
+def _restart():
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
 
 
 def job():
@@ -68,14 +93,16 @@ def job():
 
     # write markdown
     scrape('python', filename)
-    scrape('swift', filename)
+    scrape('C++', filename)
     scrape('javascript', filename)
     scrape('go', filename)
     scrape('Objective-C', filename)
-    scrape('Java', filename)
-    scrape('C++', filename)
+    scrape('swift', filename)
     scrape('C#', filename)
     
+    bot.file_helper.send_msg("Today's({date}) Github Trending update, click 👇 the folling link to check out ".format(date = strdate))
+
+    bot.file_helper.send_msg("https://github.com/LJ147/github-trending/blob/master/"+filename)
 
 
 
@@ -85,5 +112,8 @@ def job():
 
 if __name__ == '__main__':
     while True:
+        bot = Bot('bot.pkl', login_callback=remove_qr, logout_callback=_restart)
+
         job()
+        
         time.sleep(12 * 60 * 60)

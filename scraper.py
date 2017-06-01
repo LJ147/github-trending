@@ -112,7 +112,7 @@ def job():
 
 if __name__ == '__main__':
     while True:
-        bot = Bot('bot.pkl', login_callback=remove_qr, logout_callback=_restart,console_qr=True)
+        bot = Bot('bot.pkl', login_callback=remove_qr, logout_callback=_restart,console_qr=-2)
 
         job()
         
